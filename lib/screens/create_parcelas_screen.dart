@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class CreateUserScreen extends StatelessWidget {
+class CreateParcelaScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Crear Pregunta', style: GoogleFonts.lobster()),
+        title: Text('Crear Parcela', style: GoogleFonts.lobster()),
       ),
       body: Center(
         child: Text(
-          'Aquí puedes crear un nuevo Pregunta.',
+          'Aquí puedes crear un nuevo Parcela.',
           style: GoogleFonts.lobster(fontSize: 24),
         ),
       ),
