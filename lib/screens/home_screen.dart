@@ -6,7 +6,8 @@ import 'package:appcoffee/screens/create_user_screen.dart';
 import 'package:appcoffee/screens/create_productor_screen.dart';
 import 'package:appcoffee/screens/create_parcelas_screen.dart';
 import 'Certificado/certificado_screen.dart';
-import 'package:appcoffee/screens/create_pregunta_screen.dart';
+import 'Preguntas/pregunta_screen.dart';
+
 import 'package:appcoffee/widgets/loading_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -141,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         _buildListTile(
                             context, 'Preguntas', Icons.question_answer, [
                           _buildSubMenu(context, 'Crear', Icons.add,
-                              CreatePreguntaScreen()), // Implementa CreatePreguntaScreen
+                              PreguntasScreen()), // Implementa CreatePreguntaScreen
                           //   _buildSubMenu(context, 'Editar', Icons.edit,
                           //       EditPreguntaScreen()), // Implementa EditPreguntaScreen
                           //   _buildSubMenu(context, 'Lista', Icons.list,
