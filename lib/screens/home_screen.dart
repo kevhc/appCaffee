@@ -3,8 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:appcoffee/services/auth_service.dart';
 import 'package:appcoffee/screens/create_user_screen.dart';
-import 'package:appcoffee/screens/create_productor_screen.dart';
-import 'package:appcoffee/screens/create_parcelas_screen.dart';
+import 'Productor/productor_screen.dart';
+import 'Parcela/parcela_screen.dart';
 import 'Certificado/certificado_screen.dart';
 import 'Preguntas/pregunta_screen.dart';
 
@@ -112,17 +112,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         ]),
                       if (userRole == 1 || userRole == 0) // Para ambos roles
                         _buildListTile(context, 'Productores', Icons.people, [
-                          _buildSubMenu(context, 'Crear', Icons.add,
-                              CreateProductorScreen()),
-                          //   _buildSubMenu(context, 'Editar', Icons.edit,
-                          //       EditProductorScreen()), // Implementa EditProductorScreen
-                          //   _buildSubMenu(context, 'Lista', Icons.list,
-                          //       ListProductorScreen()), // Implementa ListProductorScreen
+                          _buildSubMenu(
+                              context, 'Crear', Icons.add, ProductoresScreen()),
+                          //   //   _buildSubMenu(context, 'Editar', Icons.edit,
+                          //   //       EditProductorScreen()), // Implementa EditProductorScreen
+                          //   //   _buildSubMenu(context, 'Lista', Icons.list,
+                          //   //       ListProductorScreen()), // Implementa ListProductorScreen
                         ]),
                       if (userRole == 1 || userRole == 0) // Para ambos roles
                         _buildListTile(context, 'Parcelas', Icons.landscape, [
-                          _buildSubMenu(context, 'Crear', Icons.add,
-                              CreateParcelaScreen()),
+                          _buildSubMenu(
+                              context, 'Crear', Icons.add, ParcelasScreen()),
                           //   _buildSubMenu(context, 'Editar', Icons.edit,
                           //       EditParcelaScreen()), // Implementa EditParcelaScreen
                           //   _buildSubMenu(context, 'Lista', Icons.list,
@@ -133,20 +133,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             context, 'Certificados', Icons.verified, [
                           _buildSubMenu(context, 'Lista', Icons.add,
                               CertificadosScreen()),
-                          //   _buildSubMenu(context, 'Editar', Icons.edit,
-                          //       EditCertificadoScreen()), // Implementa EditCertificadoScreen
-                          //   _buildSubMenu(context, 'Lista', Icons.list,
-                          //       ListCertificadoScreen()), // Implementa ListCertificadoScreen
                         ]),
                       if (userRole == 1) // Solo para usuarios con rol general
                         _buildListTile(
                             context, 'Preguntas', Icons.question_answer, [
-                          _buildSubMenu(context, 'Crear', Icons.add,
-                              PreguntasScreen()), // Implementa CreatePreguntaScreen
-                          //   _buildSubMenu(context, 'Editar', Icons.edit,
-                          //       EditPreguntaScreen()), // Implementa EditPreguntaScreen
-                          //   _buildSubMenu(context, 'Lista', Icons.list,
-                          //       ListPreguntaScreen()), // Implementa ListPreguntaScreen
+                          _buildSubMenu(
+                              context, 'Crear', Icons.add, PreguntasScreen()),
                         ]),
                       if (userRole == 1) // Solo para usuarios con rol general
                         // _buildListTile(

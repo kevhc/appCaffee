@@ -2,7 +2,7 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:appcoffee/models/pregunta_model.dart';
+import 'package:appcoffee/models/preguntas_model.dart';
 
 class PreguntaService {
   final String _baseUrl =

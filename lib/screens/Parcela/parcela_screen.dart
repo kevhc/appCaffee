@@ -1,43 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart'; // Paquete para deslizar
-import '../../services/pregunta_service.dart';
-import '../../models/preguntas_model.dart';
-import 'create_or_edit_pregunta.dart';
+import '../../services/parcela_service.dart';
+import '../../models/parcela_model.dart';
+import 'create_or_edit_parcela_screen.dart';
 
-class PreguntasScreen extends StatefulWidget {
+class ParcelasScreen extends StatefulWidget {
   @override
-  _PreguntasScreenState createState() => _PreguntasScreenState();
+  _ParcelasScreenState createState() => _ParcelasScreenState();
 }
 
-class _PreguntasScreenState extends State<PreguntasScreen> {
-  late Future<List<Pregunta>> _preguntas;
+class _ParcelasScreenState extends State<ParcelasScreen> {
+  late Future<List<Parcela>> _parcelas;
 
   @override
   void initState() {
     super.initState();
-    _preguntas = PreguntaService().fetchPreguntas();
+    _parcelas = ParcelaService().fetchParcelas();
   }
 
-  Future<void> _refreshPreguntas() async {
+  Future<void> _refreshParcelas() async {
     setState(() {
-      _preguntas = PreguntaService().fetchPreguntas();
+      _parcelas = ParcelaService().fetchParcelas();
     });
   }
 
-  void _showCreateOrEditPreguntaScreen([Pregunta? pregunta]) {
+  void _showCreateOrEditParcelaScreen([Parcela? parcela]) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CreateOrEditPreguntaScreen(pregunta: pregunta),
+        builder: (context) => CreateOrEditParcelaScreen(parcela: parcela),
       ),
-    ).then((_) => _refreshPreguntas());
+    ).then((_) => _refreshParcelas());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Preguntas'),
+        title: Text('Parcelas'),
         backgroundColor: Colors.teal, // Color de fondo del AppBar
         titleTextStyle: TextStyle(
           color: Colors.white, // Color del texto del título
@@ -47,7 +47,7 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: Colors.white),
-            onPressed: () => _showCreateOrEditPreguntaScreen(),
+            onPressed: () => _showCreateOrEditParcelaScreen(),
           ),
         ],
         iconTheme: IconThemeData(
@@ -55,8 +55,8 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
               .white, // Color de los íconos del AppBar, incluida la flecha de retroceso
         ),
       ),
-      body: FutureBuilder<List<Pregunta>>(
-        future: _preguntas,
+      body: FutureBuilder<List<Parcela>>(
+        future: _parcelas,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -66,15 +66,15 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final preguntas = snapshot.data;
+          final parcelas = snapshot.data;
 
           return ListView.builder(
-            itemCount: preguntas?.length ?? 0,
+            itemCount: parcelas?.length ?? 0,
             itemBuilder: (context, index) {
-              final pregunta = preguntas![index];
+              final parcela = parcelas![index];
               Color estadoColor =
-                  pregunta.estado == 1 ? Colors.green : Colors.red;
-              String estadoText = pregunta.estado == 1 ? 'Activo' : 'Inactivo';
+                  parcela.estado == 1 ? Colors.green : Colors.red;
+              String estadoText = parcela.estado == 1 ? 'Activo' : 'Inactivo';
 
               return Slidable(
                 startActionPane: ActionPane(
@@ -82,7 +82,7 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
                   children: [
                     SlidableAction(
                       onPressed: (context) {
-                        _showCreateOrEditPreguntaScreen(pregunta);
+                        _showCreateOrEditParcelaScreen(parcela);
                       },
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
@@ -98,15 +98,15 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
                       onPressed: (context) async {
                         final confirm = await _showConfirmDialog(
                           context: context,
-                          title: 'Eliminar Pregunta',
+                          title: 'Eliminar Parcela',
                           message:
-                              '¿Estás seguro de que deseas eliminar esta pregunta?',
+                              '¿Estás seguro de que deseas eliminar esta parcela?',
                         );
 
                         if (confirm) {
                           try {
-                            await PreguntaService().deletePregunta(pregunta.id);
-                            _refreshPreguntas();
+                            await ParcelaService().deleteParcela(parcela.id);
+                            _refreshParcelas();
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Error: $e')),
@@ -127,11 +127,25 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
                   child: ListTile(
                     contentPadding: EdgeInsets.all(16),
                     title: Text(
-                      pregunta.pregunta,
+                      parcela.finca,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment
+                          .start, // Alinea el texto a la izquierda
+                      children: [
+                        Text(
+                          'DNI: ${parcela.dni}',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        Text(
+                          'Hectarea Total: ${parcela.haTotal}',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ],
                     ),
                     trailing: Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -147,7 +161,7 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
                         ),
                       ),
                     ),
-                    onTap: () => _showCreateOrEditPreguntaScreen(pregunta),
+                    onTap: () => _showCreateOrEditParcelaScreen(parcela),
                   ),
                 ),
               );

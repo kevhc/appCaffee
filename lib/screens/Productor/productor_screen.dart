@@ -1,62 +1,61 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart'; // Paquete para deslizar
-import '../../services/pregunta_service.dart';
-import '../../models/preguntas_model.dart';
-import 'create_or_edit_pregunta.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import '../../services/productor_service.dart';
+import '../../models/productor_model.dart';
+import 'create_productor_screen.dart';
 
-class PreguntasScreen extends StatefulWidget {
+class ProductoresScreen extends StatefulWidget {
   @override
-  _PreguntasScreenState createState() => _PreguntasScreenState();
+  _ProductoresScreenState createState() => _ProductoresScreenState();
 }
 
-class _PreguntasScreenState extends State<PreguntasScreen> {
-  late Future<List<Pregunta>> _preguntas;
+class _ProductoresScreenState extends State<ProductoresScreen> {
+  late Future<List<Productor>> _productores;
 
   @override
   void initState() {
     super.initState();
-    _preguntas = PreguntaService().fetchPreguntas();
+    _productores = ProductorService().fetchProductores();
   }
 
-  Future<void> _refreshPreguntas() async {
+  Future<void> _refreshProductores() async {
     setState(() {
-      _preguntas = PreguntaService().fetchPreguntas();
+      _productores = ProductorService().fetchProductores();
     });
   }
 
-  void _showCreateOrEditPreguntaScreen([Pregunta? pregunta]) {
+  void _showCreateOrEditProductorScreen([Productor? productor]) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CreateOrEditPreguntaScreen(pregunta: pregunta),
+        builder: (context) => CreateOrEditProductorScreen(productor: productor),
       ),
-    ).then((_) => _refreshPreguntas());
+    ).then((_) => _refreshProductores());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Preguntas'),
-        backgroundColor: Colors.teal, // Color de fondo del AppBar
+        title: Text('Productores'),
+        backgroundColor: Colors.teal,
         titleTextStyle: TextStyle(
-          color: Colors.white, // Color del texto del título
-          fontSize: 20, // Tamaño de la fuente del título
-          fontWeight: FontWeight.bold, // Peso de la fuente
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
         ),
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: Colors.white),
-            onPressed: () => _showCreateOrEditPreguntaScreen(),
+            onPressed: () => _showCreateOrEditProductorScreen(),
           ),
         ],
         iconTheme: IconThemeData(
-          color: Colors
-              .white, // Color de los íconos del AppBar, incluida la flecha de retroceso
+          color: Colors.white,
         ),
       ),
-      body: FutureBuilder<List<Pregunta>>(
-        future: _preguntas,
+      body: FutureBuilder<List<Productor>>(
+        future: _productores,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -66,15 +65,15 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final preguntas = snapshot.data;
+          final productores = snapshot.data;
 
           return ListView.builder(
-            itemCount: preguntas?.length ?? 0,
+            itemCount: productores?.length ?? 0,
             itemBuilder: (context, index) {
-              final pregunta = preguntas![index];
+              final productor = productores![index];
               Color estadoColor =
-                  pregunta.estado == 1 ? Colors.green : Colors.red;
-              String estadoText = pregunta.estado == 1 ? 'Activo' : 'Inactivo';
+                  productor.estado == 1 ? Colors.green : Colors.red;
+              String estadoText = productor.estado == 1 ? 'Activo' : 'Inactivo';
 
               return Slidable(
                 startActionPane: ActionPane(
@@ -82,7 +81,7 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
                   children: [
                     SlidableAction(
                       onPressed: (context) {
-                        _showCreateOrEditPreguntaScreen(pregunta);
+                        _showCreateOrEditProductorScreen(productor);
                       },
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
@@ -98,15 +97,16 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
                       onPressed: (context) async {
                         final confirm = await _showConfirmDialog(
                           context: context,
-                          title: 'Eliminar Pregunta',
+                          title: 'Eliminar Productor',
                           message:
-                              '¿Estás seguro de que deseas eliminar esta pregunta?',
+                              '¿Estás seguro de que deseas eliminar este productor?',
                         );
 
                         if (confirm) {
                           try {
-                            await PreguntaService().deletePregunta(pregunta.id);
-                            _refreshPreguntas();
+                            await ProductorService()
+                                .deleteProductor(productor.id);
+                            _refreshProductores();
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Error: $e')),
@@ -127,12 +127,14 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
                   child: ListTile(
                     contentPadding: EdgeInsets.all(16),
                     title: Text(
-                      pregunta.pregunta,
+                      '${productor.nombre} ${productor.apellido}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
+                    subtitle: Text(
+                        'DNI: ${productor.dni}\nTeléfono: ${productor.telefono}'),
                     trailing: Container(
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
@@ -147,7 +149,7 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
                         ),
                       ),
                     ),
-                    onTap: () => _showCreateOrEditPreguntaScreen(pregunta),
+                    onTap: () => _showCreateOrEditProductorScreen(productor),
                   ),
                 ),
               );

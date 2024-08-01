@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:appcoffee/services/pregunta_service.dart'; // Cambiado a servicio de Pregunta
-import 'package:appcoffee/models/pregunta_model.dart'; // Cambiado a modelo de Pregunta
+import 'package:appcoffee/models/preguntas_model.dart'; // Cambiado a modelo de Pregunta
 
 class CreateOrEditPreguntaScreen extends StatefulWidget {
   final Pregunta? pregunta;
