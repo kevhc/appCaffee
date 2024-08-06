@@ -20,7 +20,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isHovering = false;
   final AuthService _authService = AuthService();
   String userName = "Cargando...";
-  String userProfilePicture = "assets/icons/icon_user.png";
+  String userProfilePicture =
+      "assets/icons/icon_user.png"; // Imagen por defecto
 
   @override
   void initState() {
@@ -52,7 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
     if (userInfo != null) {
       setState(() {
         userName = userInfo['nombre'] ?? "Nombre no disponible";
-        // Solo usa la base URL si la URL de la foto proporcionada no la incluye
         userProfilePicture = userInfo['foto'] ?? 'assets/icons/icon_user.png';
       });
     }
@@ -158,6 +158,60 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildMenuCard(
+      BuildContext context, String title, String imagePath, Widget screen) {
+    return GestureDetector(
+      onTap: () {
+        _navigateToScreen(context, screen);
+      },
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.white, Colors.grey[200]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: Colors.grey.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                imagePath,
+                width: 40,
+                height: 40,
+              ),
+              SizedBox(height: 8),
+              Text(
+                title,
+                style: GoogleFonts.roboto(
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   List<Map<String, dynamic>> _getMenuItems() {
     List<Map<String, dynamic>> menuItems = [];
 
@@ -206,65 +260,15 @@ class _HomeScreenState extends State<HomeScreen> {
     return menuItems;
   }
 
-  Widget _buildMenuCard(
-      BuildContext context, String title, String imagePath, Widget screen) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => LoadingScreen()),
-        );
-        Future.delayed(Duration(seconds: 1), () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => screen),
-          );
-        });
-      },
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.white, Colors.grey[200]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
-          border: Border.all(
-            color: Colors.grey.withOpacity(0.2),
-            width: 1,
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                imagePath,
-                width: 40,
-                height: 40,
-              ),
-              SizedBox(height: 8),
-              Text(
-                title,
-                style: GoogleFonts.roboto(
-                  fontSize: 16,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
+  void _navigateToScreen(BuildContext context, Widget screen) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => LoadingScreen()),
     );
+    Future.delayed(Duration(milliseconds: 500), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => screen),
+      );
+    });
   }
 
   Widget _buildFloatingActionButton(BuildContext context) {

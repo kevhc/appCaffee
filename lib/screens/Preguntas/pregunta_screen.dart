@@ -150,7 +150,6 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.black,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     trailing: Container(
