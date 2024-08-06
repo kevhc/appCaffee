@@ -55,6 +55,7 @@ dev_dependencies:
   flutter_slidable: ^3.1.1
   mime_dart: ^3.0.0
   http_parser: ^4.0.0
+  fl_chart: ^0.68.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -67,9 +68,13 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/icons/icon_user.png
+    - assets/icons/icon_farmer.png
+    - assets/icons/icon_plost.png
+    - assets/icons/icon_certificate.png
+    - assets/icons/icon_question.png
+    - assets/icons/icon_form.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

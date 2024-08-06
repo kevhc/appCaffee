@@ -20,17 +20,17 @@ class _CreateOrEditProductorScreenState
   final _nombreController = TextEditingController();
   final _apellidoController = TextEditingController();
   final _dniController = TextEditingController();
-  final _sexoController = TextEditingController();
   final _caserioController = TextEditingController();
   final _distritoController = TextEditingController();
   final _provinciaController = TextEditingController();
   final _regionController = TextEditingController();
-  final _estatusController = TextEditingController();
   final _telefonoController = TextEditingController();
   final _longitudController = TextEditingController();
   final _latitudController = TextEditingController();
   final _altitudController = TextEditingController();
 
+  String? _selectedSexo;
+  String? _selectedEstatus;
   int _estado = 1; // Por defecto, 1 para activo
   File? _image;
 
@@ -39,23 +39,27 @@ class _CreateOrEditProductorScreenState
     super.initState();
 
     if (widget.productor != null) {
-      _nombreController.text = widget.productor!.nombre;
-      _apellidoController.text = widget.productor!.apellido;
-      _dniController.text = widget.productor!.dni.toString();
-      _sexoController.text = widget.productor!.sexo;
-      _caserioController.text = widget.productor!.caserio;
-      _distritoController.text = widget.productor!.distrito;
-      _provinciaController.text = widget.productor!.provincia;
-      _regionController.text = widget.productor!.region;
-      _estatusController.text = widget.productor!.estatus;
-      _telefonoController.text = widget.productor!.telefono.toString();
-      _longitudController.text = widget.productor!.longitud;
-      _latitudController.text = widget.productor!.latitud;
-      _altitudController.text = widget.productor!.altitud;
-      _estado = widget.productor!.estado;
-      if (widget.productor!.foto.isNotEmpty) {
-        _image = File(widget.productor!.foto);
+      final productor = widget.productor!;
+      _nombreController.text = productor.nombre;
+      _apellidoController.text = productor.apellido;
+      _dniController.text = productor.dni.toString();
+      _caserioController.text = productor.caserio;
+      _distritoController.text = productor.distrito;
+      _provinciaController.text = productor.provincia;
+      _regionController.text = productor.region;
+      _telefonoController.text = productor.telefono.toString();
+      _longitudController.text = productor.longitud;
+      _latitudController.text = productor.latitud;
+      _altitudController.text = productor.altitud;
+      _estado = productor.estado;
+      _selectedSexo = productor.sexo;
+      _selectedEstatus = productor.estatus;
+      if (productor.foto.isNotEmpty) {
+        _image = File(productor.foto);
       }
+    } else {
+      _selectedSexo = 'Masculino'; // Valor por defecto
+      _selectedEstatus = 'C0'; // Valor por defecto
     }
   }
 
@@ -64,12 +68,10 @@ class _CreateOrEditProductorScreenState
     _nombreController.dispose();
     _apellidoController.dispose();
     _dniController.dispose();
-    _sexoController.dispose();
     _caserioController.dispose();
     _distritoController.dispose();
     _provinciaController.dispose();
     _regionController.dispose();
-    _estatusController.dispose();
     _telefonoController.dispose();
     _longitudController.dispose();
     _latitudController.dispose();
@@ -83,14 +85,14 @@ class _CreateOrEditProductorScreenState
         id: widget.productor?.id ?? '',
         nombre: _nombreController.text,
         apellido: _apellidoController.text,
-        dni: int.parse(_dniController.text),
-        sexo: _sexoController.text,
+        dni: int.tryParse(_dniController.text) ?? 0,
+        sexo: _selectedSexo!,
         caserio: _caserioController.text,
         distrito: _distritoController.text,
         provincia: _provinciaController.text,
         region: _regionController.text,
-        estatus: _estatusController.text,
-        telefono: int.parse(_telefonoController.text),
+        estatus: _selectedEstatus!,
+        telefono: int.tryParse(_telefonoController.text) ?? 0,
         longitud: _longitudController.text,
         latitud: _latitudController.text,
         altitud: _altitudController.text,
@@ -123,12 +125,18 @@ class _CreateOrEditProductorScreenState
   Future<void> _pickImage() async {
     final source = await _showImageSourceDialog();
     if (source != null) {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: source);
-      if (pickedFile != null) {
-        setState(() {
-          _image = File(pickedFile.path);
-        });
+      try {
+        final picker = ImagePicker();
+        final pickedFile = await picker.pickImage(source: source);
+        if (pickedFile != null) {
+          setState(() {
+            _image = File(pickedFile.path);
+          });
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al seleccionar imagen: $e')),
+        );
       }
     }
   }
@@ -214,8 +222,8 @@ class _CreateOrEditProductorScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.productor == null ? 'Crear Productor' : 'Editar Productor',
-          style: TextStyle(color: Colors.white), // Color blanco para el título
+          widget.productor == null ? 'CREAR PRODUCTOR' : 'EDITAR PRODUCTOR',
+          style: TextStyle(color: Colors.white),
         ),
         actions: widget.productor != null
             ? [
@@ -228,299 +236,117 @@ class _CreateOrEditProductorScreenState
               ]
             : [],
         backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
-          child: Card(
-            elevation: 8,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      widget.productor == null
-                          ? 'Nuevo Productor'
-                          : 'Editar Productor',
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                                color: Colors.teal, // Color para el texto
-                              ),
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _nombreController,
-                      decoration: InputDecoration(
-                        labelText: 'Nombre',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa el nombre';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _apellidoController,
-                      decoration: InputDecoration(
-                        labelText: 'Apellido',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa el apellido';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _dniController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'DNI',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa el DNI';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _sexoController,
-                      decoration: InputDecoration(
-                        labelText: 'Sexo',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa el sexo';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _caserioController,
-                      decoration: InputDecoration(
-                        labelText: 'Caserio',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa el caserio';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _distritoController,
-                      decoration: InputDecoration(
-                        labelText: 'Distrito',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa el distrito';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _provinciaController,
-                      decoration: InputDecoration(
-                        labelText: 'Provincia',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa la provincia';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _regionController,
-                      decoration: InputDecoration(
-                        labelText: 'Región',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa la región';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _estatusController,
-                      decoration: InputDecoration(
-                        labelText: 'Estatus',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa el estatus';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _telefonoController,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        labelText: 'Teléfono',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa el teléfono';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _longitudController,
-                      decoration: InputDecoration(
-                        labelText: 'Longitud',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa la longitud';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _latitudController,
-                      decoration: InputDecoration(
-                        labelText: 'Latitud',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa la latitud';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _altitudController,
-                      decoration: InputDecoration(
-                        labelText: 'Altitud',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa la altitud';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 16),
-                    _image != null
-                        ? Image.file(
-                            _image!,
-                            height: 200,
-                            fit: BoxFit.cover,
-                          )
-                        : Placeholder(
-                            fallbackHeight: 200,
-                          ),
-                    SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _pickImage,
-                      child: Text('Seleccionar Imagen'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal, // Color del botón
-                        foregroundColor:
-                            Colors.white, // Color del texto del botón
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _submitForm,
-                      child: Text(widget.productor == null
-                          ? 'Crear Productor'
-                          : 'Actualizar Productor'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal, // Color del botón
-                        foregroundColor:
-                            Colors.white, // Color del texto del botón
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ],
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: _image != null ? FileImage(_image!) : null,
+                    child: _image == null
+                        ? Icon(Icons.camera_alt, size: 50)
+                        : null,
+                  ),
                 ),
-              ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _nombreController,
+                  decoration: InputDecoration(labelText: 'Nombre'),
+                  validator: (value) =>
+                      value!.isEmpty ? 'El nombre es requerido' : null,
+                ),
+                TextFormField(
+                  controller: _apellidoController,
+                  decoration: InputDecoration(labelText: 'Apellido'),
+                  validator: (value) =>
+                      value!.isEmpty ? 'El apellido es requerido' : null,
+                ),
+                TextFormField(
+                  controller: _dniController,
+                  decoration: InputDecoration(labelText: 'DNI'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'El DNI es requerido';
+                    } else if (int.tryParse(value) == null) {
+                      return 'El DNI debe ser un número';
+                    }
+                    return null;
+                  },
+                ),
+                DropdownButtonFormField<String>(
+                  value: _selectedSexo,
+                  items: ['Masculino', 'Femenino']
+                      .map((sexo) => DropdownMenuItem(
+                            value: sexo,
+                            child: Text(sexo),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedSexo = value;
+                    });
+                  },
+                  decoration: InputDecoration(labelText: 'Sexo'),
+                  validator: (value) =>
+                      value == null ? 'El sexo es requerido' : null,
+                ),
+                TextFormField(
+                  controller: _caserioController,
+                  decoration: InputDecoration(labelText: 'Caserio'),
+                ),
+                TextFormField(
+                  controller: _distritoController,
+                  decoration: InputDecoration(labelText: 'Distrito'),
+                ),
+                TextFormField(
+                  controller: _provinciaController,
+                  decoration: InputDecoration(labelText: 'Provincia'),
+                ),
+                TextFormField(
+                  controller: _regionController,
+                  decoration: InputDecoration(labelText: 'Región'),
+                ),
+                TextFormField(
+                  controller: _telefonoController,
+                  decoration: InputDecoration(labelText: 'Teléfono'),
+                  keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'El teléfono es requerido';
+                    } else if (int.tryParse(value) == null) {
+                      return 'El teléfono debe ser un número';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _longitudController,
+                  decoration: InputDecoration(labelText: 'Longitud'),
+                ),
+                TextFormField(
+                  controller: _latitudController,
+                  decoration: InputDecoration(labelText: 'Latitud'),
+                ),
+                TextFormField(
+                  controller: _altitudController,
+                  decoration: InputDecoration(labelText: 'Altitud'),
+                ),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _submitForm,
+                  child: Text(widget.productor == null
+                      ? 'Crear Productor'
+                      : 'Actualizar Productor'),
+                ),
+              ],
             ),
           ),
         ),

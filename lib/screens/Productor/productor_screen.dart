@@ -37,7 +37,7 @@ class _ProductoresScreenState extends State<ProductoresScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Productores'),
+        title: Text('PRODUCTORES'),
         backgroundColor: Colors.teal,
         titleTextStyle: TextStyle(
           color: Colors.white,

@@ -3,6 +3,8 @@ import 'package:flutter_slidable/flutter_slidable.dart'; // Paquete para desliza
 import '../../services/parcela_service.dart';
 import '../../models/parcela_model.dart';
 import 'create_or_edit_parcela_screen.dart';
+import 'package:appcoffee/widgets/floating_menu.dart';
+import 'package:appcoffee/services/auth_service.dart';
 
 class ParcelasScreen extends StatefulWidget {
   @override
@@ -33,17 +35,30 @@ class _ParcelasScreenState extends State<ParcelasScreen> {
     ).then((_) => _refreshParcelas());
   }
 
+  Future<void> _logout() async {
+    try {
+      await AuthService().logout();
+      Navigator.of(context).pushReplacementNamed('/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cerrar sesión. Inténtalo de nuevo.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Parcelas'),
-        backgroundColor: Colors.teal, // Color de fondo del AppBar
-        titleTextStyle: TextStyle(
-          color: Colors.white, // Color del texto del título
-          fontSize: 20, // Tamaño de la fuente del título
-          fontWeight: FontWeight.bold, // Peso de la fuente
+        title: Text(
+          'PARCELAS',
+          style: TextStyle(
+            fontSize: 20,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        backgroundColor: Colors.teal,
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: Colors.white),
@@ -51,8 +66,7 @@ class _ParcelasScreenState extends State<ParcelasScreen> {
           ),
         ],
         iconTheme: IconThemeData(
-          color: Colors
-              .white, // Color de los íconos del AppBar, incluida la flecha de retroceso
+          color: Colors.white,
         ),
       ),
       body: FutureBuilder<List<Parcela>>(
@@ -69,6 +83,7 @@ class _ParcelasScreenState extends State<ParcelasScreen> {
           final parcelas = snapshot.data;
 
           return ListView.builder(
+            padding: const EdgeInsets.all(16),
             itemCount: parcelas?.length ?? 0,
             itemBuilder: (context, index) {
               final parcela = parcelas![index];
@@ -122,36 +137,41 @@ class _ParcelasScreenState extends State<ParcelasScreen> {
                   ],
                 ),
                 child: Card(
-                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  elevation: 5,
+                  margin: EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 8,
+                  shadowColor: Colors.black.withOpacity(0.2),
                   child: ListTile(
                     contentPadding: EdgeInsets.all(16),
                     title: Text(
                       parcela.finca,
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment
-                          .start, // Alinea el texto a la izquierda
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'DNI: ${parcela.dni}',
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 14, color: Colors.black),
                         ),
                         Text(
                           'Hectarea Total: ${parcela.haTotal}',
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 14, color: Colors.black),
                         ),
                       ],
                     ),
                     trailing: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: estadoColor,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         estadoText,
@@ -168,6 +188,15 @@ class _ParcelasScreenState extends State<ParcelasScreen> {
             },
           );
         },
+      ),
+      floatingActionButton: FloatingMenu(
+        onHomePressed: () {
+          Navigator.pushNamed(context, '/home');
+        },
+        onProfilePressed: () {
+          Navigator.pushNamed(context, '/profile');
+        },
+        onLogoutPressed: _logout,
       ),
     );
   }

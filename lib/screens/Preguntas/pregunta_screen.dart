@@ -3,6 +3,8 @@ import 'package:flutter_slidable/flutter_slidable.dart'; // Paquete para desliza
 import '../../services/pregunta_service.dart';
 import '../../models/preguntas_model.dart';
 import 'create_or_edit_pregunta.dart';
+import 'package:appcoffee/widgets/floating_menu.dart';
+import 'package:appcoffee/services/auth_service.dart';
 
 class PreguntasScreen extends StatefulWidget {
   @override
@@ -33,17 +35,30 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
     ).then((_) => _refreshPreguntas());
   }
 
+  Future<void> _logout() async {
+    try {
+      await AuthService().logout();
+      Navigator.of(context).pushReplacementNamed('/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cerrar sesión. Inténtalo de nuevo.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Preguntas'),
-        backgroundColor: Colors.teal, // Color de fondo del AppBar
-        titleTextStyle: TextStyle(
-          color: Colors.white, // Color del texto del título
-          fontSize: 20, // Tamaño de la fuente del título
-          fontWeight: FontWeight.bold, // Peso de la fuente
+        title: Text(
+          'PREGUNTAS',
+          style: TextStyle(
+            fontSize: 20,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        backgroundColor: Colors.teal,
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: Colors.white),
@@ -51,8 +66,7 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
           ),
         ],
         iconTheme: IconThemeData(
-          color: Colors
-              .white, // Color de los íconos del AppBar, incluida la flecha de retroceso
+          color: Colors.white,
         ),
       ),
       body: FutureBuilder<List<Pregunta>>(
@@ -69,6 +83,7 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
           final preguntas = snapshot.data;
 
           return ListView.builder(
+            padding: const EdgeInsets.all(16),
             itemCount: preguntas?.length ?? 0,
             itemBuilder: (context, index) {
               final pregunta = preguntas![index];
@@ -122,22 +137,28 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
                   ],
                 ),
                 child: Card(
-                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  elevation: 5,
+                  margin: EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 8,
+                  shadowColor: Colors.black.withOpacity(0.2),
                   child: ListTile(
                     contentPadding: EdgeInsets.all(16),
                     title: Text(
                       pregunta.pregunta,
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     trailing: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: estadoColor,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         estadoText,
@@ -154,6 +175,15 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
             },
           );
         },
+      ),
+      floatingActionButton: FloatingMenu(
+        onHomePressed: () {
+          Navigator.pushNamed(context, '/home');
+        },
+        onProfilePressed: () {
+          Navigator.pushNamed(context, '/profile');
+        },
+        onLogoutPressed: _logout,
       ),
     );
   }

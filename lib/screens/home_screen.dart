@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:appcoffee/services/auth_service.dart';
 import 'package:appcoffee/screens/create_user_screen.dart';
 import 'Productor/productor_screen.dart';
 import 'Parcela/parcela_screen.dart';
 import 'Certificado/certificado_screen.dart';
 import 'Preguntas/pregunta_screen.dart';
-
 import 'package:appcoffee/widgets/loading_screen.dart';
+import 'dart:math';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -16,169 +15,142 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int userRole = 0; // Valor por defecto en caso de error
+  int userRole = 0;
+  bool _isMenuOpen = false;
+  bool _isHovering = false;
+  final AuthService _authService = AuthService();
+  String userName = "Cargando...";
+  String userProfilePicture = "assets/icons/icon_user.png";
 
   @override
   void initState() {
     super.initState();
     _loadUserRole();
+    _loadUserInfo(); // Asegúrate de que esta línea esté incluida para cargar la información del usuario
   }
 
   Future<void> _loadUserRole() async {
-    final role = await AuthService().getUserRole();
+    final role = await _authService.getUserRole();
     setState(() {
-      userRole = role ?? 0; // Valor por defecto si no se puede obtener el rol
+      userRole = role ?? 0;
     });
+  }
+
+  Future<void> _logout() async {
+    try {
+      await _authService.logout();
+      Navigator.of(context).pushReplacementNamed('/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cerrar sesión. Inténtalo de nuevo.')),
+      );
+    }
+  }
+
+  Future<void> _loadUserInfo() async {
+    final userInfo = await _authService.getUserInfo();
+    if (userInfo != null) {
+      setState(() {
+        userName = userInfo['nombre'] ?? "Nombre no disponible";
+        // Solo usa la base URL si la URL de la foto proporcionada no la incluye
+        userProfilePicture = userInfo['foto'] ?? 'assets/icons/icon_user.png';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Graficos', style: GoogleFonts.lobster()),
+        title: Text(
+          'Aprosem Cafe & Cacao',
+          style: GoogleFonts.roboto(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.teal,
       ),
-      drawer: _buildDrawer(context),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircleAvatar(
-              radius: 60,
-              backgroundImage: NetworkImage(
-                  'https://via.placeholder.com/150'), // Aquí puedes poner la URL de la foto del usuario
-            ).animate().fadeIn(duration: 1200.ms).then().scale(),
+            _buildWelcomeBox(),
             SizedBox(height: 20),
-            Text('Bienvenido, Usuario',
-                style: GoogleFonts.lobster(fontSize: 24)),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16.0,
+                  mainAxisSpacing: 16.0,
+                  childAspectRatio: 1.5,
+                ),
+                itemCount: _getMenuItems().length,
+                itemBuilder: (context, index) {
+                  final item = _getMenuItems()[index];
+                  return _buildMenuCard(
+                    context,
+                    item['title'],
+                    item['icon'],
+                    item['screen'],
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
+      floatingActionButton: _buildFloatingActionButton(context),
     );
   }
 
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: Stack(
-        children: <Widget>[
-          // Contenedor del menú lateral
-          Container(
-            color: Colors.white, // Fondo blanco para todo el menú lateral
+  Widget _buildWelcomeBox() {
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300),
+      padding: const EdgeInsets.all(16.0),
+      margin: const EdgeInsets.only(bottom: 16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundImage: userProfilePicture.startsWith('http')
+                ? NetworkImage(userProfilePicture)
+                : AssetImage(userProfilePicture) as ImageProvider,
+            radius: 30,
+          ),
+          SizedBox(width: 16),
+          Expanded(
             child: Column(
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      SizedBox(
-                          height:
-                              40), // Margen superior para dar espacio al ícono
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 30,
-                                  backgroundImage: NetworkImage(
-                                      'https://via.placeholder.com/150'), // Aquí puedes poner la URL de la foto del usuario
-                                ),
-                                SizedBox(width: 16),
-                                Expanded(
-                                  child: Text(
-                                    'Nombre del Usuario', // Aquí puedes colocar el nombre del usuario
-                                    style: GoogleFonts.lobster(fontSize: 18),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Bienvenido',
+                  style: GoogleFonts.roboto(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
-                Expanded(
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: <Widget>[
-                      if (userRole == 1) // Solo para usuarios con rol general
-                        _buildListTile(context, 'Usuarios', Icons.people, [
-                          _buildSubMenu(
-                              context, 'Crear', Icons.add, CreateUserScreen()),
-                          // _buildSubMenu(context, 'Editar', Icons.edit,
-                          //     EditUserScreen()), // Implementa EditUserScreen
-                          // _buildSubMenu(context, 'Lista', Icons.list,
-                          //     ListUserScreen()), // Implementa ListUserScreen
-                        ]),
-                      if (userRole == 1 || userRole == 0) // Para ambos roles
-                        _buildListTile(context, 'Productores', Icons.people, [
-                          _buildSubMenu(
-                              context, 'Crear', Icons.add, ProductoresScreen()),
-                          //   //   _buildSubMenu(context, 'Editar', Icons.edit,
-                          //   //       EditProductorScreen()), // Implementa EditProductorScreen
-                          //   //   _buildSubMenu(context, 'Lista', Icons.list,
-                          //   //       ListProductorScreen()), // Implementa ListProductorScreen
-                        ]),
-                      if (userRole == 1 || userRole == 0) // Para ambos roles
-                        _buildListTile(context, 'Parcelas', Icons.landscape, [
-                          _buildSubMenu(
-                              context, 'Crear', Icons.add, ParcelasScreen()),
-                          //   _buildSubMenu(context, 'Editar', Icons.edit,
-                          //       EditParcelaScreen()), // Implementa EditParcelaScreen
-                          //   _buildSubMenu(context, 'Lista', Icons.list,
-                          //       ListParcelaScreen()), // Implementa ListParcelaScreen
-                        ]),
-                      if (userRole == 1) // Solo para usuarios con rol general
-                        _buildListTile(
-                            context, 'Certificados', Icons.verified, [
-                          _buildSubMenu(context, 'Lista', Icons.add,
-                              CertificadosScreen()),
-                        ]),
-                      if (userRole == 1) // Solo para usuarios con rol general
-                        _buildListTile(
-                            context, 'Preguntas', Icons.question_answer, [
-                          _buildSubMenu(
-                              context, 'Crear', Icons.add, PreguntasScreen()),
-                        ]),
-                      if (userRole == 1) // Solo para usuarios con rol general
-                        // _buildListTile(
-                        //     context, 'Formulario', Icons.question_answer, [
-                        //   _buildSubMenu(context, 'Crear', Icons.add,
-                        //       CreateFormularioScreen()), // Implementa CreateFormularioScreen
-                        //   //   _buildSubMenu(context, 'Editar', Icons.edit,
-                        //   //       EditFormularioScreen()), // Implementa EditFormularioScreen
-                        //   //   _buildSubMenu(context, 'Lista', Icons.list,
-                        //   //       ListFormularioScreen()), // Implementa ListFormularioScreen
-                        // ]),
-                        SizedBox(
-                            height: 10), // Espacio antes de "Cerrar Sesión"
-                      ListTile(
-                        leading: Icon(Icons.logout,
-                            size: 20), // Tamaño del ícono de cerrar sesión
-                        title: Text(
-                          'Cerrar Sesión',
-                          style: TextStyle(fontSize: 14), // Tamaño de la fuente
-                        ),
-                        onTap: () async {
-                          await AuthService().logout();
-                          Navigator.pushReplacementNamed(context, '/login');
-                        },
-                      ).animate().fadeIn(duration: 250.ms).then().scale(),
-                    ],
+                SizedBox(height: 4),
+                Text(
+                  userName,
+                  style: GoogleFonts.roboto(
+                    fontSize: 16,
+                    color: Colors.black54,
                   ),
                 ),
               ],
-            ),
-          ),
-          // Icono de cerrar
-          Positioned(
-            top: 16,
-            right: 12, // Ajustado para la esquina superior derecha
-            child: IconButton(
-              icon: Icon(Icons.close, size: 25),
-              onPressed: () {
-                Navigator.of(context).pop(); // Cierra el menú lateral
-              },
             ),
           ),
         ],
@@ -186,54 +158,179 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildListTile(
-      BuildContext context, String title, IconData icon, List<Widget> subMenu) {
-    return Theme(
-      data: ThemeData(
-        splashColor: Colors.transparent, // Elimina el color de resaltado
-        highlightColor: Colors.transparent, // Elimina el color de resaltado
-      ),
-      child: ExpansionTile(
-        leading: Icon(icon, size: 20), // Tamaño del ícono
-        title: Text(
-          title,
-          style: TextStyle(fontSize: 16), // Tamaño de la fuente
+  List<Map<String, dynamic>> _getMenuItems() {
+    List<Map<String, dynamic>> menuItems = [];
+
+    if (userRole == 1) {
+      menuItems.add({
+        'title': 'Usuarios',
+        'icon': 'assets/icons/icon_user.png',
+        'screen': CreateUserScreen(),
+      });
+    }
+
+    if (userRole == 1 || userRole == 0) {
+      menuItems.add({
+        'title': 'Productores',
+        'icon': 'assets/icons/icon_farmer.png',
+        'screen': ProductoresScreen(),
+      });
+
+      menuItems.add({
+        'title': 'Parcelas',
+        'icon': 'assets/icons/icon_plost.png',
+        'screen': ParcelasScreen(),
+      });
+    }
+
+    if (userRole == 1) {
+      menuItems.add({
+        'title': 'Certificados',
+        'icon': 'assets/icons/icon_certificate.png',
+        'screen': CertificadosScreen(),
+      });
+
+      menuItems.add({
+        'title': 'Preguntas',
+        'icon': 'assets/icons/icon_question.png',
+        'screen': PreguntasScreen(),
+      });
+
+      menuItems.add({
+        'title': 'Formulario',
+        'icon': 'assets/icons/icon_form.png',
+        'screen': PreguntasScreen(),
+      });
+    }
+
+    return menuItems;
+  }
+
+  Widget _buildMenuCard(
+      BuildContext context, String title, String imagePath, Widget screen) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => LoadingScreen()),
+        );
+        Future.delayed(Duration(seconds: 1), () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => screen),
+          );
+        });
+      },
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.white, Colors.grey[200]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: Colors.grey.withOpacity(0.2),
+            width: 1,
+          ),
         ),
-        tilePadding:
-            EdgeInsets.symmetric(horizontal: 16.0), // Ajusta el padding
-        children: subMenu,
-        backgroundColor: Colors.white, // Fondo blanco de la expansión
-        collapsedBackgroundColor:
-            Colors.white, // Fondo blanco del tile colapsado
-        expandedCrossAxisAlignment: CrossAxisAlignment.start, // Sin contornos
-        expandedAlignment: Alignment.centerLeft,
-      ).animate().fadeIn(duration: 250.ms).then().scale(),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                imagePath,
+                width: 40,
+                height: 40,
+              ),
+              SizedBox(height: 8),
+              Text(
+                title,
+                style: GoogleFonts.roboto(
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildSubMenu(
-      BuildContext context, String title, IconData icon, Widget screen) {
-    return Container(
-      color: Colors.white, // Fondo blanco para los sub-menús
-      child: ListTile(
-        leading: Icon(icon, size: 20), // Tamaño del ícono
-        title: Text(
-          title,
-          style: TextStyle(fontSize: 14), // Tamaño de la fuente
+  Widget _buildFloatingActionButton(BuildContext context) {
+    const double buttonSize = 56.0;
+    const double arcRadius = 95.0;
+    final double angleStep = pi / 4;
+
+    return Stack(
+      children: [
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: FloatingActionButton(
+            backgroundColor: Colors.teal,
+            child: Icon(Icons.menu, color: Colors.white),
+            onPressed: () {
+              setState(() {
+                _isMenuOpen = !_isMenuOpen;
+              });
+            },
+            shape: CircleBorder(),
+          ),
         ),
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => LoadingScreen(),
+        if (_isMenuOpen) ...[
+          for (int i = 0; i < 3; i++) // 3 buttons: Home, Profile, Logout
+            Positioned(
+              bottom: 16 + arcRadius * sin(i * angleStep),
+              right: 16 + arcRadius * cos(i * angleStep),
+              child: GestureDetector(
+                onTap: () {
+                  if (i == 2) {
+                    _logout();
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  width: _isHovering ? 70.0 : 56.0,
+                  height: _isHovering ? 70.0 : 56.0,
+                  decoration: BoxDecoration(
+                    color: Colors.teal.shade700,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      if (_isHovering)
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Icon(
+                      i == 0
+                          ? Icons.home
+                          : i == 1
+                              ? Icons.person
+                              : Icons.logout,
+                      color: Colors.white,
+                      size: _isHovering ? 30.0 : 24.0,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          );
-          Future.delayed(Duration(seconds: 1), () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => screen),
-            );
-          });
-        },
-      ).animate().fadeIn(duration: 250.ms).then().scale(),
+        ],
+      ],
     );
   }
 }

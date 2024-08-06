@@ -197,7 +197,7 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.parcela == null ? 'Crear Parcela' : 'Editar Parcela',
+          widget.parcela == null ? 'CREAR PARCELA' : 'Editar PARCELA',
           style: TextStyle(color: Colors.white), // Color blanco para el título
         ),
         actions: widget.parcela != null
@@ -211,6 +211,7 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
               ]
             : [],
         backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(color: Colors.white), // Co
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -231,10 +232,13 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
                       widget.parcela == null
                           ? 'Nueva Parcela'
                           : 'Editar Parcela',
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black, // Color negro para el título
+                          ),
                     ),
                     const SizedBox(height: 16),
                     _buildTextFormField(
@@ -353,7 +357,10 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Estado'),
+                        Text(
+                          'Estado',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         DropdownButton<int>(
                           value: _estado,
                           onChanged: (int? newValue) {
@@ -387,8 +394,8 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
                       ),
                       child: Text(
                         widget.parcela == null
-                            ? 'Crear Parcela'
-                            : 'Actualizar Parcela',
+                            ? 'CREAR PARCELA'
+                            : 'ACTUALIZAR PARCELA',
                       ),
                     ),
                   ],
@@ -412,7 +419,10 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
         controller: controller,
         decoration: InputDecoration(
           labelText: labelText,
-          border: OutlineInputBorder(),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
         validator: validator,
       ),
@@ -430,7 +440,10 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
           labelText: labelText,
-          border: OutlineInputBorder(),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {

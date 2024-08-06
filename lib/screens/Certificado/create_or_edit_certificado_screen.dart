@@ -46,27 +46,20 @@ class _CreateOrEditCertificadoScreenState
         estado: _estado,
       );
 
-      if (widget.certificado == null) {
-        // Crear certificado sin confirmación
-        try {
+      try {
+        if (widget.certificado == null) {
+          // Crear certificado sin confirmación
           await CertificadoService().createCertificado(certificado);
-          Navigator.pop(context);
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
-          );
-        }
-      } else {
-        // Editar certificado sin confirmación
-        try {
+        } else {
+          // Editar certificado sin confirmación
           await CertificadoService()
               .updateCertificado(certificado.id, certificado);
-          Navigator.pop(context);
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
-          );
         }
+        Navigator.pop(context);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       }
     }
   }
@@ -123,11 +116,11 @@ class _CreateOrEditCertificadoScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-            widget.certificado == null
-                ? 'Crear Certificado'
-                : 'Editar Certificado',
-            style:
-                TextStyle(color: Colors.white)), // Color blanco para el título
+          widget.certificado == null
+              ? 'CREAR CERTIFICADO'
+              : 'EDITAR CERTIFICADO',
+          style: TextStyle(color: Colors.white), // Color blanco para el título
+        ),
         actions: widget.certificado != null
             ? [
                 IconButton(
@@ -139,6 +132,8 @@ class _CreateOrEditCertificadoScreenState
               ]
             : [],
         backgroundColor: Colors.teal,
+        iconTheme:
+            IconThemeData(color: Colors.white), // Color blanco para los íconos
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

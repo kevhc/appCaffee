@@ -45,26 +45,19 @@ class _CreateOrEditPreguntaScreenState
         estado: _estado,
       );
 
-      if (widget.pregunta == null) {
-        // Crear pregunta
-        try {
+      try {
+        if (widget.pregunta == null) {
+          // Crear pregunta
           await PreguntaService().createPregunta(pregunta);
-          Navigator.pop(context);
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
-          );
-        }
-      } else {
-        // Editar pregunta
-        try {
+        } else {
+          // Editar pregunta
           await PreguntaService().updatePregunta(pregunta.id, pregunta);
-          Navigator.pop(context);
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
-          );
         }
+        Navigator.pop(context);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       }
     }
   }
@@ -121,9 +114,9 @@ class _CreateOrEditPreguntaScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-            widget.pregunta == null ? 'Crear Pregunta' : 'Editar Pregunta',
-            style:
-                TextStyle(color: Colors.white)), // Color blanco para el título
+          widget.pregunta == null ? 'CREAR PREGUNTA' : 'EDITAR PREGUNTA',
+          style: TextStyle(color: Colors.white), // Color blanco para el título
+        ),
         actions: widget.pregunta != null
             ? [
                 IconButton(
@@ -135,6 +128,7 @@ class _CreateOrEditPreguntaScreenState
               ]
             : [],
         backgroundColor: Colors.teal,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

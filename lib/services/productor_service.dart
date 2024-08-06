@@ -41,7 +41,8 @@ class ProductorService {
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         ...productor.toJson(),
-        'foto': imagePath,
+        'foto': imagePath ??
+            productor.foto, // Usa la URL de la imagen cargada o la existente
       }),
     );
 
@@ -64,7 +65,8 @@ class ProductorService {
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         ...productor.toJson(),
-        'foto': imagePath,
+        'foto': imagePath ??
+            productor.foto, // Usa la URL de la imagen cargada o la existente
       }),
     );
 

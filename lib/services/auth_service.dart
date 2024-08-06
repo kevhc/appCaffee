@@ -2,6 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:path/path.dart' as path;
 
 class AuthService {
   final String _baseUrl =
@@ -52,6 +53,70 @@ class AuthService {
         return decodedToken['rol'];
       } catch (e) {
         print('Error decoding token: $e');
+      }
+    }
+    return null;
+  }
+
+  Future<String?> getUserName() async {
+    final token = await getToken();
+    if (token != null) {
+      try {
+        final decodedToken = JwtDecoder.decode(token);
+        return decodedToken['nombre'];
+      } catch (e) {
+        print('Error decoding token: $e');
+      }
+    }
+    return null;
+  }
+
+  Future<String?> getUserPhotoUrl() async {
+    final token = await getToken();
+    if (token != null) {
+      try {
+        final response = await http.get(
+          Uri.parse('$_baseUrl/me'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          final photoPath = data['foto'];
+          // Asegúrate de que photoPath sea una URL completa o la ruta correcta
+          return photoPath;
+        } else {
+          print('Error fetching user info: ${response.statusCode}');
+        }
+      } catch (e) {
+        print('Error during fetching user info: $e');
+      }
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> getUserInfo() async {
+    final token = await getToken();
+    if (token != null) {
+      try {
+        final response = await http.get(
+          Uri.parse('$_baseUrl/me'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          return json.decode(response.body);
+        } else {
+          print('Error fetching user info: ${response.statusCode}');
+        }
+      } catch (e) {
+        print('Error during fetching user info: $e');
       }
     }
     return null;
