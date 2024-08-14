@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:appcoffee/services/pregunta_service.dart'; // Cambiado a servicio de Pregunta
-import 'package:appcoffee/models/preguntas_model.dart'; // Cambiado a modelo de Pregunta
+import 'package:appcoffee/models/preguntas_model.dart';
+import 'package:appcoffee/Controllers/pregunta_controller.dart';
 
 class CreateOrEditPreguntaScreen extends StatefulWidget {
   final Pregunta? pregunta;
@@ -17,43 +17,34 @@ class _CreateOrEditPreguntaScreenState
   final _formKey = GlobalKey<FormState>();
   final _preguntaController = TextEditingController();
   int _estado = 1; // Por defecto, 1 para activo
+  final PreguntaController _controller = PreguntaController();
 
   @override
   void initState() {
     super.initState();
-
     if (widget.pregunta != null) {
       _preguntaController.text = widget.pregunta!.pregunta;
       _estado = widget.pregunta!.estado;
     }
   }
 
-  @override
-  void dispose() {
-    _preguntaController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submitForm() async {
+  Future<void> _savePregunta() async {
     if (_formKey.currentState!.validate()) {
       final pregunta = Pregunta(
         id: widget.pregunta?.id ?? '',
         pregunta: _preguntaController.text,
-        fecha: widget.pregunta == null
-            ? DateTime.now() // Fecha actual al crear
-            : widget.pregunta!.fecha, // Mantener la fecha existente al editar
+        fecha: DateTime.now(),
         estado: _estado,
       );
 
       try {
         if (widget.pregunta == null) {
-          // Crear pregunta
-          await PreguntaService().createPregunta(pregunta);
+          await _controller.createPregunta(pregunta);
         } else {
-          // Editar pregunta
-          await PreguntaService().updatePregunta(pregunta.id, pregunta);
+          await _controller.updatePregunta(pregunta.id, pregunta);
         }
-        Navigator.pop(context);
+
+        Navigator.of(context).pop();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
@@ -72,8 +63,8 @@ class _CreateOrEditPreguntaScreenState
 
       if (confirm) {
         try {
-          await PreguntaService().deletePregunta(widget.pregunta!.id);
-          Navigator.pop(context);
+          await _controller.deletePregunta(widget.pregunta!.id);
+          Navigator.of(context).pop();
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: $e')),
@@ -114,32 +105,36 @@ class _CreateOrEditPreguntaScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.pregunta == null ? 'CREAR PREGUNTA' : 'EDITAR PREGUNTA',
-          style: TextStyle(color: Colors.white), // Color blanco para el título
+          widget.pregunta == null ? 'Crear Pregunta' : 'Editar Pregunta',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20, // Tamaño del texto
+            color: Colors.white,
+          ),
         ),
+        backgroundColor: Colors.teal,
         actions: widget.pregunta != null
             ? [
                 IconButton(
-                  icon: Icon(Icons.delete, color: Colors.white),
-                  onPressed: () async {
-                    await _deletePregunta();
-                  },
+                  icon: Icon(Icons.delete),
+                  onPressed: _deletePregunta,
                 ),
               ]
             : [],
-        backgroundColor: Colors.teal,
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(
+          color: Colors.white,
+        ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Card(
             elevation: 8,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -149,12 +144,11 @@ class _CreateOrEditPreguntaScreenState
                       widget.pregunta == null
                           ? 'Nueva Pregunta'
                           : 'Editar Pregunta',
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                                color: Colors.teal, // Color para el texto
-                              ),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.teal,
+                      ),
                     ),
                     SizedBox(height: 16),
                     TextFormField(
@@ -168,7 +162,7 @@ class _CreateOrEditPreguntaScreenState
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa la pregunta';
+                          return 'Este campo es obligatorio';
                         }
                         return null;
                       },
@@ -176,6 +170,13 @@ class _CreateOrEditPreguntaScreenState
                     SizedBox(height: 16),
                     DropdownButtonFormField<int>(
                       value: _estado,
+                      decoration: InputDecoration(
+                        labelText: 'Estado',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                      ),
                       items: [
                         DropdownMenuItem(value: 1, child: Text('Activo')),
                         DropdownMenuItem(value: 0, child: Text('Inactivo')),
@@ -185,28 +186,31 @@ class _CreateOrEditPreguntaScreenState
                           _estado = value!;
                         });
                       },
-                      decoration: InputDecoration(
-                        labelText: 'Estado',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Este campo es obligatorio';
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: _submitForm,
+                      onPressed: _savePregunta,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
+                        backgroundColor: Colors.teal, // Fondo del botón
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius:
+                              BorderRadius.circular(12), // Borde redondeado
                         ),
-                        foregroundColor:
-                            Colors.white, // Color blanco para el texto
+                        padding: EdgeInsets.symmetric(vertical: 16), // Padding
                       ),
                       child: Text(
                         widget.pregunta == null ? 'Crear' : 'Actualizar',
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ],

@@ -1,45 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart'; // Paquete para deslizar
-// import '../../services/certificado_service.dart';
-import '../../models/certificado_model.dart';
-import '../../Controllers/certificado_controller.dart';
-import 'create_or_edit_certificado_screen.dart';
-import 'package:appcoffee/services/auth_service.dart';
+import '../../services/usuario_service.dart';
+import '../../models/usuario_model.dart';
+import 'package:appcoffee/screens/Usuario/create_user_screen.dart';
 import 'package:appcoffee/widgets/floating_menu.dart';
+import 'package:appcoffee/services/usuario_service.dart';
+import 'package:appcoffee/services/auth_service.dart';
 
-class CertificadosScreen extends StatefulWidget {
+class UsuariosScreen extends StatefulWidget {
   @override
-  _CertificadosScreenState createState() => _CertificadosScreenState();
+  _UsuariosScreenState createState() => _UsuariosScreenState();
 }
 
-class _CertificadosScreenState extends State<CertificadosScreen> {
-  late Future<List<Certificado>> _certificados;
-  final CertificadoController _controller = CertificadoController();
+class _UsuariosScreenState extends State<UsuariosScreen> {
+  late Future<List<Usuario>> _usuarios;
 
   @override
   void initState() {
     super.initState();
-    _certificados = _controller.fetchCertificados();
+    _usuarios = UsuarioService().fetchUsuarios();
   }
 
-  Future<void> _refreshCertificados() async {
+  Future<void> _refreshUsuarios() async {
     setState(() {
-      _certificados = _controller.fetchCertificados();
+      _usuarios = UsuarioService().fetchUsuarios();
     });
   }
 
-  void _showCreateOrEditCertificadoScreen([Certificado? certificado]) {
+  void _showCreateOrEditUsuarioScreen([Usuario? usuario]) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            CreateOrEditCertificadoScreen(certificado: certificado),
+        builder: (context) => CreateOrEditUsuarioScreen(usuario: usuario),
       ),
-    ).then((_) => _refreshCertificados());
+    ).then((_) => _refreshUsuarios());
   }
 
   Future<void> _logout() async {
     try {
+      await AuthService().logout();
       Navigator.of(context).pushReplacementNamed('/login');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,7 +52,7 @@ class _CertificadosScreenState extends State<CertificadosScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'CERTIFICADOS',
+          'USUARIOS',
           style: TextStyle(
             fontSize: 20,
             color: Colors.white,
@@ -64,15 +63,15 @@ class _CertificadosScreenState extends State<CertificadosScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: Colors.white),
-            onPressed: () => _showCreateOrEditCertificadoScreen(),
+            onPressed: () => _showCreateOrEditUsuarioScreen(),
           ),
         ],
         iconTheme: IconThemeData(
           color: Colors.white,
         ),
       ),
-      body: FutureBuilder<List<Certificado>>(
-        future: _certificados,
+      body: FutureBuilder<List<Usuario>>(
+        future: _usuarios,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -82,17 +81,16 @@ class _CertificadosScreenState extends State<CertificadosScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final certificados = snapshot.data;
+          final usuarios = snapshot.data;
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: certificados?.length ?? 0,
+            itemCount: usuarios?.length ?? 0,
             itemBuilder: (context, index) {
-              final certificado = certificados![index];
+              final usuario = usuarios![index];
               Color estadoColor =
-                  certificado.estado == 1 ? Colors.green : Colors.red;
-              String estadoText =
-                  certificado.estado == 1 ? 'Activo' : 'Inactivo';
+                  usuario.estado == 1 ? Colors.green : Colors.red;
+              String estadoText = usuario.estado == 1 ? 'Activo' : 'Inactivo';
 
               return Slidable(
                 startActionPane: ActionPane(
@@ -100,7 +98,7 @@ class _CertificadosScreenState extends State<CertificadosScreen> {
                   children: [
                     SlidableAction(
                       onPressed: (context) {
-                        _showCreateOrEditCertificadoScreen(certificado);
+                        _showCreateOrEditUsuarioScreen(usuario);
                       },
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
@@ -116,15 +114,15 @@ class _CertificadosScreenState extends State<CertificadosScreen> {
                       onPressed: (context) async {
                         final confirm = await _showConfirmDialog(
                           context: context,
-                          title: 'Eliminar Certificado',
+                          title: 'Eliminar Usuario',
                           message:
-                              '¿Estás seguro de que deseas eliminar este certificado?',
+                              '¿Estás seguro de que deseas eliminar este usuario?',
                         );
 
                         if (confirm) {
                           try {
-                            await _controller.deleteCertificado(certificado.id);
-                            _refreshCertificados();
+                            await UsuarioService().deleteUsuario(usuario.id);
+                            _refreshUsuarios();
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Error: $e')),
@@ -149,10 +147,16 @@ class _CertificadosScreenState extends State<CertificadosScreen> {
                   child: ListTile(
                     contentPadding: EdgeInsets.all(16),
                     title: Text(
-                      certificado.certificado,
+                      '${usuario.nombre} ${usuario.apellido}',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.black,
+                      ),
+                    ),
+                    subtitle: Text(
+                      usuario.email,
+                      style: TextStyle(
+                        color: Colors.grey[600],
                       ),
                     ),
                     trailing: Container(
@@ -166,11 +170,11 @@ class _CertificadosScreenState extends State<CertificadosScreen> {
                         estadoText,
                         style: TextStyle(
                           color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    onTap: () =>
-                        _showCreateOrEditCertificadoScreen(certificado),
+                    onTap: () => _showCreateOrEditUsuarioScreen(usuario),
                   ),
                 ),
               );

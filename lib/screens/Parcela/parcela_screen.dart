@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart'; // Paquete para deslizar
-import '../../services/parcela_service.dart';
 import '../../models/parcela_model.dart';
 import 'create_or_edit_parcela_screen.dart';
+import '../../Controllers/parcela_controller.dart'; // Asegúrate de tener un controlador de Parcela
 import 'package:appcoffee/widgets/floating_menu.dart';
 import 'package:appcoffee/services/auth_service.dart';
 
@@ -13,16 +13,17 @@ class ParcelasScreen extends StatefulWidget {
 
 class _ParcelasScreenState extends State<ParcelasScreen> {
   late Future<List<Parcela>> _parcelas;
+  final ParcelaController _controller = ParcelaController();
 
   @override
   void initState() {
     super.initState();
-    _parcelas = ParcelaService().fetchParcelas();
+    _parcelas = _controller.fetchParcelas();
   }
 
   Future<void> _refreshParcelas() async {
     setState(() {
-      _parcelas = ParcelaService().fetchParcelas();
+      _parcelas = _controller.fetchParcelas();
     });
   }
 
@@ -37,7 +38,6 @@ class _ParcelasScreenState extends State<ParcelasScreen> {
 
   Future<void> _logout() async {
     try {
-      await AuthService().logout();
       Navigator.of(context).pushReplacementNamed('/login');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -120,7 +120,7 @@ class _ParcelasScreenState extends State<ParcelasScreen> {
 
                         if (confirm) {
                           try {
-                            await ParcelaService().deleteParcela(parcela.id);
+                            await _controller.deleteParcela(parcela.id);
                             _refreshParcelas();
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -146,25 +146,12 @@ class _ParcelasScreenState extends State<ParcelasScreen> {
                   child: ListTile(
                     contentPadding: EdgeInsets.all(16),
                     title: Text(
-                      parcela.finca,
+                      parcela
+                          .finca, // Aquí ajusta el campo de finca o el que prefieras mostrar
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.black,
-                        fontWeight: FontWeight.bold,
                       ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'DNI: ${parcela.dni}',
-                          style: TextStyle(fontSize: 14, color: Colors.black),
-                        ),
-                        Text(
-                          'Hectarea Total: ${parcela.haTotal}',
-                          style: TextStyle(fontSize: 14, color: Colors.black),
-                        ),
-                      ],
                     ),
                     trailing: Container(
                       padding:
@@ -177,7 +164,6 @@ class _ParcelasScreenState extends State<ParcelasScreen> {
                         estadoText,
                         style: TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),

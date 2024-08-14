@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:appcoffee/services/auth_service.dart';
-import 'package:appcoffee/screens/create_user_screen.dart';
+import 'package:appcoffee/screens/Usuario/usuario_screen.dart';
 import 'Productor/productor_screen.dart';
 import 'Parcela/parcela_screen.dart';
 import 'Certificado/certificado_screen.dart';
@@ -219,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
       menuItems.add({
         'title': 'Usuarios',
         'icon': 'assets/icons/icon_user.png',
-        'screen': CreateUserScreen(),
+        'screen': UsuariosScreen(),
       });
     }
 
@@ -308,7 +308,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: _isHovering ? 70.0 : 56.0,
                   height: _isHovering ? 70.0 : 56.0,
                   decoration: BoxDecoration(
-                    color: Colors.teal.shade700,
+                    gradient: LinearGradient(
+                      colors: [Colors.teal.shade400, Colors.teal.shade700],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       if (_isHovering)

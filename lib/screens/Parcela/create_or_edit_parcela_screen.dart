@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:appcoffee/services/parcela_service.dart';
 import 'package:appcoffee/models/parcela_model.dart';
+import 'package:appcoffee/Controllers/parcela_controller.dart';
 
 class CreateOrEditParcelaScreen extends StatefulWidget {
   final Parcela? parcela;
@@ -14,7 +14,6 @@ class CreateOrEditParcelaScreen extends StatefulWidget {
 
 class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
   final _formKey = GlobalKey<FormState>();
-
   final _dniController = TextEditingController();
   final _fincaController = TextEditingController();
   final _cafeProController = TextEditingController();
@@ -37,13 +36,12 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
   final _typicaController = TextEditingController();
   final _borbonController = TextEditingController();
   final _otroController = TextEditingController();
-
   int _estado = 1; // Por defecto, 1 para activo
+  final ParcelaController _controller = ParcelaController();
 
   @override
   void initState() {
     super.initState();
-
     if (widget.parcela != null) {
       _dniController.text = widget.parcela!.dni.toString();
       _fincaController.text = widget.parcela!.finca;
@@ -71,72 +69,44 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _dniController.dispose();
-    _fincaController.dispose();
-    _cafeProController.dispose();
-    _cafeCreciController.dispose();
-    _purmaController.dispose();
-    _bosqueController.dispose();
-    _panLlevarController.dispose();
-    _pastoController.dispose();
-    _haTotalController.dispose();
-    _proAnteriorController.dispose();
-    _proEstimadoController.dispose();
-    _loteController.dispose();
-    _haController.dispose();
-    _edadController.dispose();
-    _proEstimado2Controller.dispose();
-    _caturraController.dispose();
-    _pacheController.dispose();
-    _catimorController.dispose();
-    _catuaiController.dispose();
-    _typicaController.dispose();
-    _borbonController.dispose();
-    _otroController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submitForm() async {
+  Future<void> _saveParcela() async {
     if (_formKey.currentState!.validate()) {
       final parcela = Parcela(
         id: widget.parcela?.id ?? '',
-        dni: int.tryParse(_dniController.text) ?? 0,
+        dni: int.parse(_dniController.text),
         finca: _fincaController.text,
         cafePro: _cafeProController.text,
         cafeCreci: _cafeCreciController.text,
-        purma: int.tryParse(_purmaController.text) ?? 0,
-        bosque: int.tryParse(_bosqueController.text) ?? 0,
-        panLlevar: int.tryParse(_panLlevarController.text) ?? 0,
-        pasto: int.tryParse(_pastoController.text) ?? 0,
-        haTotal: int.tryParse(_haTotalController.text) ?? 0,
-        proAnterior: int.tryParse(_proAnteriorController.text) ?? 0,
-        proEstimado: int.tryParse(_proEstimadoController.text) ?? 0,
-        lote: int.tryParse(_loteController.text) ?? 0,
-        ha: int.tryParse(_haController.text) ?? 0,
-        edad: int.tryParse(_edadController.text) ?? 0,
-        proEstimado2: int.tryParse(_proEstimado2Controller.text) ?? 0,
-        caturra: int.tryParse(_caturraController.text) ?? 0,
-        pache: int.tryParse(_pacheController.text) ?? 0,
-        catimor: int.tryParse(_catimorController.text) ?? 0,
-        catuai: int.tryParse(_catuaiController.text) ?? 0,
-        typica: int.tryParse(_typicaController.text) ?? 0,
-        borbon: int.tryParse(_borbonController.text) ?? 0,
-        otro: int.tryParse(_otroController.text) ?? 0,
-        fecha: widget.parcela == null ? DateTime.now() : widget.parcela!.fecha,
+        purma: int.parse(_purmaController.text),
+        bosque: int.parse(_bosqueController.text),
+        panLlevar: int.parse(_panLlevarController.text),
+        pasto: int.parse(_pastoController.text),
+        haTotal: int.parse(_haTotalController.text),
+        proAnterior: int.parse(_proAnteriorController.text),
+        proEstimado: int.parse(_proEstimadoController.text),
+        lote: int.parse(_loteController.text),
+        ha: int.parse(_haController.text),
+        edad: int.parse(_edadController.text),
+        proEstimado2: int.parse(_proEstimado2Controller.text),
+        caturra: int.parse(_caturraController.text),
+        pache: int.parse(_pacheController.text),
+        catimor: int.parse(_catimorController.text),
+        catuai: int.parse(_catuaiController.text),
+        typica: int.parse(_typicaController.text),
+        borbon: int.parse(_borbonController.text),
+        otro: int.parse(_otroController.text),
+        fecha: DateTime.now(),
         estado: _estado,
       );
 
       try {
         if (widget.parcela == null) {
-          // Crear parcela
-          await ParcelaService().createParcela(parcela);
+          await _controller.createParcela(parcela);
         } else {
-          // Editar parcela
-          await ParcelaService().updateParcela(parcela.id, parcela);
+          await _controller.updateParcela(parcela.id, parcela);
         }
-        Navigator.pop(context);
+
+        Navigator.of(context).pop();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
@@ -155,8 +125,8 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
 
       if (confirm) {
         try {
-          await ParcelaService().deleteParcela(widget.parcela!.id);
-          Navigator.pop(context);
+          await _controller.deleteParcela(widget.parcela!.id);
+          Navigator.of(context).pop();
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: $e')),
@@ -197,32 +167,36 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.parcela == null ? 'CREAR PARCELA' : 'Editar PARCELA',
-          style: TextStyle(color: Colors.white), // Color blanco para el título
+          widget.parcela == null ? 'Crear Parcela' : 'Editar Parcela',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: Colors.white,
+          ),
         ),
+        backgroundColor: Colors.teal,
         actions: widget.parcela != null
             ? [
                 IconButton(
-                  icon: Icon(Icons.delete, color: Colors.white),
-                  onPressed: () async {
-                    await _deleteParcela();
-                  },
+                  icon: Icon(Icons.delete),
+                  onPressed: _deleteParcela,
                 ),
               ]
             : [],
-        backgroundColor: Colors.teal,
-        iconTheme: IconThemeData(color: Colors.white), // Co
+        iconTheme: IconThemeData(
+          color: Colors.white,
+        ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Card(
             elevation: 8,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -232,170 +206,75 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
                       widget.parcela == null
                           ? 'Nueva Parcela'
                           : 'Editar Parcela',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black, // Color negro para el título
-                          ),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.teal,
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    _buildTextFormField(
-                      controller: _dniController,
-                      labelText: 'DNI',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Este campo es obligatorio';
-                        }
-                        return null;
-                      },
-                    ),
-                    _buildTextFormField(
-                      controller: _fincaController,
-                      labelText: 'Finca',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Este campo es obligatorio';
-                        }
-                        return null;
-                      },
-                    ),
-                    _buildTextFormField(
-                      controller: _cafeProController,
-                      labelText: 'Café Producción',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Este campo es obligatorio';
-                        }
-                        return null;
-                      },
-                    ),
-                    _buildTextFormField(
-                      controller: _cafeCreciController,
-                      labelText: 'Café Crecimiento',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Este campo es obligatorio';
-                        }
-                        return null;
-                      },
-                    ),
-                    _buildNumberFormField(
-                      controller: _purmaController,
-                      labelText: 'Purma',
-                    ),
-                    _buildNumberFormField(
-                      controller: _bosqueController,
-                      labelText: 'Bosque',
-                    ),
-                    _buildNumberFormField(
-                      controller: _panLlevarController,
-                      labelText: 'Pan Llevar',
-                    ),
-                    _buildNumberFormField(
-                      controller: _pastoController,
-                      labelText: 'Pasto',
-                    ),
-                    _buildNumberFormField(
-                      controller: _haTotalController,
-                      labelText: 'Ha Total',
-                    ),
-                    _buildNumberFormField(
-                      controller: _proAnteriorController,
-                      labelText: 'Pro Anterior',
-                    ),
-                    _buildNumberFormField(
-                      controller: _proEstimadoController,
-                      labelText: 'Pro Estimado',
-                    ),
-                    _buildNumberFormField(
-                      controller: _loteController,
-                      labelText: 'Lote',
-                    ),
-                    _buildNumberFormField(
-                      controller: _haController,
-                      labelText: 'Ha',
-                    ),
-                    _buildNumberFormField(
-                      controller: _edadController,
-                      labelText: 'Edad',
-                    ),
-                    _buildNumberFormField(
-                      controller: _proEstimado2Controller,
-                      labelText: 'Pro Estimado 2',
-                    ),
-                    _buildNumberFormField(
-                      controller: _caturraController,
-                      labelText: 'Caturra',
-                    ),
-                    _buildNumberFormField(
-                      controller: _pacheController,
-                      labelText: 'Pache',
-                    ),
-                    _buildNumberFormField(
-                      controller: _catimorController,
-                      labelText: 'Catimor',
-                    ),
-                    _buildNumberFormField(
-                      controller: _catuaiController,
-                      labelText: 'Catuai',
-                    ),
-                    _buildNumberFormField(
-                      controller: _typicaController,
-                      labelText: 'Typica',
-                    ),
-                    _buildNumberFormField(
-                      controller: _borbonController,
-                      labelText: 'Borbon',
-                    ),
-                    _buildNumberFormField(
-                      controller: _otroController,
-                      labelText: 'Otro',
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Estado',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                    SizedBox(height: 16),
+                    _buildTextField(_dniController, 'DNI', 'Número de DNI'),
+                    _buildTextField(
+                        _fincaController, 'Finca', 'Nombre de la finca'),
+                    _buildTextField(_cafeProController, 'Café Producción',
+                        'Café de producción'),
+                    _buildTextField(_cafeCreciController, 'Café Crecimiento',
+                        'Café en crecimiento'),
+                    _buildTextField(_purmaController, 'Purma', 'Purma'),
+                    _buildTextField(_bosqueController, 'Bosque', 'Bosque'),
+                    _buildTextField(
+                        _panLlevarController, 'Pan Llevar', 'Pan Llevar'),
+                    _buildTextField(_pastoController, 'Pasto', 'Pasto'),
+                    _buildTextField(
+                        _haTotalController, 'HA Total', 'Hectáreas Totales'),
+                    _buildTextField(_proAnteriorController, 'Pro Anterior',
+                        'Producción Anterior'),
+                    _buildTextField(_proEstimadoController, 'Pro Estimado',
+                        'Producción Estimada'),
+                    _buildTextField(_loteController, 'Lote', 'Lote'),
+                    _buildTextField(_haController, 'HA', 'Hectáreas'),
+                    _buildTextField(_edadController, 'Edad', 'Edad'),
+                    _buildTextField(_proEstimado2Controller, 'Pro Estimado 2',
+                        'Producción Estimada 2'),
+                    _buildTextField(_caturraController, 'Caturra', 'Caturra'),
+                    _buildTextField(_pacheController, 'Pache', 'Pache'),
+                    _buildTextField(_catimorController, 'Catimor', 'Catimor'),
+                    _buildTextField(_catuaiController, 'Catuai', 'Catuai'),
+                    _buildTextField(_typicaController, 'Typica', 'Typica'),
+                    _buildTextField(_borbonController, 'Borbon', 'Borbon'),
+                    _buildTextField(_otroController, 'Otro', 'Otro'),
+                    SizedBox(height: 16),
+                    DropdownButtonFormField<int>(
+                      value: _estado,
+                      decoration: InputDecoration(
+                        labelText: 'Estado',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: 1,
+                          child: Text('Activo'),
                         ),
-                        DropdownButton<int>(
-                          value: _estado,
-                          onChanged: (int? newValue) {
-                            setState(() {
-                              _estado = newValue!;
-                            });
-                          },
-                          items: [
-                            DropdownMenuItem(
-                              value: 1,
-                              child: Text('Activo'),
-                            ),
-                            DropdownMenuItem(
-                              value: 0,
-                              child: Text('Inactivo'),
-                            ),
-                          ],
+                        DropdownMenuItem(
+                          value: 0,
+                          child: Text('Inactivo'),
                         ),
                       ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _estado = value;
+                          });
+                        }
+                      },
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: _submitForm,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        foregroundColor:
-                            Colors.white, // Color blanco para el texto
-                      ),
+                      onPressed: _saveParcela,
                       child: Text(
                         widget.parcela == null
-                            ? 'CREAR PARCELA'
-                            : 'ACTUALIZAR PARCELA',
+                            ? 'Crear Parcela'
+                            : 'Actualizar Parcela',
                       ),
                     ),
                   ],
@@ -408,49 +287,25 @@ class _CreateOrEditParcelaScreenState extends State<CreateOrEditParcelaScreen> {
     );
   }
 
-  Widget _buildTextFormField({
-    required TextEditingController controller,
-    required String labelText,
-    String? Function(String?)? validator,
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    String hint, {
+    TextInputType keyboardType = TextInputType.text,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: controller,
+        keyboardType: keyboardType,
         decoration: InputDecoration(
-          labelText: labelText,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-        validator: validator,
-      ),
-    );
-  }
-
-  Widget _buildNumberFormField({
-    required TextEditingController controller,
-    required String labelText,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          labelText: labelText,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          labelText: label,
+          hintText: hint,
+          border: OutlineInputBorder(),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'Este campo es obligatorio';
-          }
-          if (int.tryParse(value) == null) {
-            return 'Ingrese un número válido';
           }
           return null;
         },

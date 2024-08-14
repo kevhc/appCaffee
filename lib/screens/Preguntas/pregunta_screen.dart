@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart'; // Paquete para deslizar
-import '../../services/pregunta_service.dart';
-import '../../models/preguntas_model.dart';
-import 'create_or_edit_pregunta.dart';
-import 'package:appcoffee/widgets/floating_menu.dart';
+import '../../models/preguntas_model.dart'; // Asegúrate de tener un modelo de Pregunta
+import '../../Controllers/pregunta_controller.dart'; // Asegúrate de tener un controlador de Pregunta
+import 'create_or_edit_pregunta_screen.dart'; // Pantalla para crear o editar preguntas
 import 'package:appcoffee/services/auth_service.dart';
+import 'package:appcoffee/widgets/floating_menu.dart';
 
 class PreguntasScreen extends StatefulWidget {
   @override
@@ -13,16 +13,17 @@ class PreguntasScreen extends StatefulWidget {
 
 class _PreguntasScreenState extends State<PreguntasScreen> {
   late Future<List<Pregunta>> _preguntas;
+  final PreguntaController _controller = PreguntaController();
 
   @override
   void initState() {
     super.initState();
-    _preguntas = PreguntaService().fetchPreguntas();
+    _preguntas = _controller.fetchPreguntas();
   }
 
   Future<void> _refreshPreguntas() async {
     setState(() {
-      _preguntas = PreguntaService().fetchPreguntas();
+      _preguntas = _controller.fetchPreguntas();
     });
   }
 
@@ -37,7 +38,6 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
 
   Future<void> _logout() async {
     try {
-      await AuthService().logout();
       Navigator.of(context).pushReplacementNamed('/login');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -120,7 +120,7 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
 
                         if (confirm) {
                           try {
-                            await PreguntaService().deletePregunta(pregunta.id);
+                            await _controller.deletePregunta(pregunta.id);
                             _refreshPreguntas();
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -146,7 +146,7 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
                   child: ListTile(
                     contentPadding: EdgeInsets.all(16),
                     title: Text(
-                      pregunta.pregunta,
+                      pregunta.pregunta, // Aquí ajusta el campo de pregunta
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.black,
@@ -163,7 +163,6 @@ class _PreguntasScreenState extends State<PreguntasScreen> {
                         estadoText,
                         style: TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),

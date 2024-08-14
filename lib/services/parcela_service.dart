@@ -8,7 +8,6 @@ class ParcelaService {
   final String _baseUrl =
       'http://10.0.2.2:3000'; // Cambia esto a la URL de tu servidor
 
-  // Obtener todas las parcelas
   Future<List<Parcela>> fetchParcelas() async {
     final response = await http.get(Uri.parse('$_baseUrl/parcelas'));
 
@@ -20,7 +19,6 @@ class ParcelaService {
     }
   }
 
-  // Crear una nueva parcela
   Future<void> createParcela(Parcela parcela) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/parcelas'),
@@ -33,7 +31,6 @@ class ParcelaService {
     }
   }
 
-  // Actualizar una parcela existente
   Future<void> updateParcela(String id, Parcela parcela) async {
     final response = await http.put(
       Uri.parse('$_baseUrl/parcelas/$id'),
@@ -46,7 +43,6 @@ class ParcelaService {
     }
   }
 
-  // Eliminar una parcela
   Future<void> deleteParcela(String id) async {
     final response = await http.delete(Uri.parse('$_baseUrl/parcelas/$id'));
 

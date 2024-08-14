@@ -15,9 +15,6 @@ class AuthService {
         body: json.encode({'usuario': usuario, 'clave': clave}),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}'); // Para depuración
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final token = data['token'];
@@ -27,6 +24,8 @@ class AuthService {
           await prefs.setString('auth_token', token);
           return true;
         }
+      } else {
+        print('Login failed: ${response.statusCode}');
       }
     } catch (e) {
       print('Error during login: $e');
@@ -86,7 +85,9 @@ class AuthService {
           final data = json.decode(response.body);
           final photoPath = data['foto'];
           // Asegúrate de que photoPath sea una URL completa o la ruta correcta
-          return photoPath;
+          return photoPath != null
+              ? 'http://10.0.2.2:3000/uploads/usuarios/$photoPath'
+              : null;
         } else {
           print('Error fetching user info: ${response.statusCode}');
         }

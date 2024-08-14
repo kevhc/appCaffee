@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:appcoffee/services/certificado_service.dart';
 import 'package:appcoffee/models/certificado_model.dart';
+import '../../Controllers/certificado_controller.dart';
 
 class CreateOrEditCertificadoScreen extends StatefulWidget {
   final Certificado? certificado;
@@ -17,45 +17,34 @@ class _CreateOrEditCertificadoScreenState
   final _formKey = GlobalKey<FormState>();
   final _certificadoController = TextEditingController();
   int _estado = 1; // Por defecto, 1 para activo
+  final CertificadoController _controller = CertificadoController();
 
   @override
   void initState() {
     super.initState();
-
     if (widget.certificado != null) {
       _certificadoController.text = widget.certificado!.certificado;
       _estado = widget.certificado!.estado;
     }
   }
 
-  @override
-  void dispose() {
-    _certificadoController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submitForm() async {
+  Future<void> _saveCertificado() async {
     if (_formKey.currentState!.validate()) {
       final certificado = Certificado(
         id: widget.certificado?.id ?? '',
         certificado: _certificadoController.text,
-        fecha: widget.certificado == null
-            ? DateTime.now() // Fecha actual al crear
-            : widget
-                .certificado!.fecha, // Mantener la fecha existente al editar
+        fecha: DateTime.now(),
         estado: _estado,
       );
 
       try {
         if (widget.certificado == null) {
-          // Crear certificado sin confirmación
-          await CertificadoService().createCertificado(certificado);
+          await _controller.createCertificado(certificado);
         } else {
-          // Editar certificado sin confirmación
-          await CertificadoService()
-              .updateCertificado(certificado.id, certificado);
+          await _controller.updateCertificado(certificado.id, certificado);
         }
-        Navigator.pop(context);
+
+        Navigator.of(context).pop();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
@@ -74,8 +63,8 @@ class _CreateOrEditCertificadoScreenState
 
       if (confirm) {
         try {
-          await CertificadoService().deleteCertificado(widget.certificado!.id);
-          Navigator.pop(context);
+          await _controller.deleteCertificado(widget.certificado!.id);
+          Navigator.of(context).pop();
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: $e')),
@@ -117,34 +106,37 @@ class _CreateOrEditCertificadoScreenState
       appBar: AppBar(
         title: Text(
           widget.certificado == null
-              ? 'CREAR CERTIFICADO'
-              : 'EDITAR CERTIFICADO',
-          style: TextStyle(color: Colors.white), // Color blanco para el título
+              ? 'Crear Certificado'
+              : 'Editar Certificado',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20, // Tamaño del texto
+            color: Colors.white,
+          ),
         ),
+        backgroundColor: Colors.teal,
         actions: widget.certificado != null
             ? [
                 IconButton(
-                  icon: Icon(Icons.delete, color: Colors.white),
-                  onPressed: () async {
-                    await _deleteCertificado();
-                  },
+                  icon: Icon(Icons.delete),
+                  onPressed: _deleteCertificado,
                 ),
               ]
             : [],
-        backgroundColor: Colors.teal,
-        iconTheme:
-            IconThemeData(color: Colors.white), // Color blanco para los íconos
+        iconTheme: IconThemeData(
+          color: Colors.white,
+        ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Card(
             elevation: 8,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -154,12 +146,11 @@ class _CreateOrEditCertificadoScreenState
                       widget.certificado == null
                           ? 'Nuevo Certificado'
                           : 'Editar Certificado',
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                                color: Colors.teal, // Color para el texto
-                              ),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.teal,
+                      ),
                     ),
                     SizedBox(height: 16),
                     TextFormField(
@@ -173,18 +164,21 @@ class _CreateOrEditCertificadoScreenState
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa el certificado';
+                          return 'Este campo es obligatorio';
                         }
                         return null;
                       },
                     ),
                     SizedBox(height: 16),
-                    if (widget.certificado == null)
-                      // Mostrar el campo de fecha solo al crear
-
-                      SizedBox(height: 16),
                     DropdownButtonFormField<int>(
                       value: _estado,
+                      decoration: InputDecoration(
+                        labelText: 'Estado',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                      ),
                       items: [
                         DropdownMenuItem(value: 1, child: Text('Activo')),
                         DropdownMenuItem(value: 0, child: Text('Inactivo')),
@@ -194,28 +188,31 @@ class _CreateOrEditCertificadoScreenState
                           _estado = value!;
                         });
                       },
-                      decoration: InputDecoration(
-                        labelText: 'Estado',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Este campo es obligatorio';
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: _submitForm,
+                      onPressed: _saveCertificado,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
+                        backgroundColor: Colors.teal, // Fondo del botón
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius:
+                              BorderRadius.circular(12), // Borde redondeado
                         ),
-                        foregroundColor:
-                            Colors.white, // Color blanco para el texto
+                        padding: EdgeInsets.symmetric(vertical: 16), // Padding
                       ),
                       child: Text(
                         widget.certificado == null ? 'Crear' : 'Actualizar',
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ],
