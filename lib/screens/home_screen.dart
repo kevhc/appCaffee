@@ -37,6 +37,18 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _loadUserInfo() async {
+    final userInfo = await _authService.getUserInfo();
+    if (userInfo != null) {
+      setState(() {
+        userName = userInfo['nombre'] ?? "Nombre no disponible";
+        userProfilePicture = userInfo['foto'] != null
+            ? 'http://10.0.2.2:3000/uploads/usuarios/${userInfo['foto']}'
+            : 'assets/icons/icon_user.png';
+      });
+    }
+  }
+
   Future<void> _logout() async {
     try {
       await _authService.logout();
@@ -45,16 +57,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al cerrar sesión. Inténtalo de nuevo.')),
       );
-    }
-  }
-
-  Future<void> _loadUserInfo() async {
-    final userInfo = await _authService.getUserInfo();
-    if (userInfo != null) {
-      setState(() {
-        userName = userInfo['nombre'] ?? "Nombre no disponible";
-        userProfilePicture = userInfo['foto'] ?? 'assets/icons/icon_user.png';
-      });
     }
   }
 
@@ -123,11 +125,26 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundImage: userProfilePicture.startsWith('http')
-                ? NetworkImage(userProfilePicture)
-                : AssetImage(userProfilePicture) as ImageProvider,
-            radius: 30,
+          FutureBuilder<String?>(
+            future: _authService.getUserPhotoUrl(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircleAvatar(
+                  backgroundImage: AssetImage('assets/icons/icon_user.png'),
+                  radius: 30,
+                );
+              } else if (snapshot.hasData && snapshot.data != null) {
+                return CircleAvatar(
+                  backgroundImage: NetworkImage(snapshot.data!),
+                  radius: 30,
+                );
+              } else {
+                return CircleAvatar(
+                  backgroundImage: AssetImage('assets/icons/icon_user.png'),
+                  radius: 30,
+                );
+              }
+            },
           ),
           SizedBox(width: 16),
           Expanded(
@@ -219,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
       menuItems.add({
         'title': 'Usuarios',
         'icon': 'assets/icons/icon_user.png',
-        'screen': UsuariosScreen(),
+        'screen': ParcelasScreen(),
       });
     }
 

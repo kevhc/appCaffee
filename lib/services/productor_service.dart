@@ -1,49 +1,37 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
-import '../models/productor_model.dart';
+import 'package:appcoffee/models/productor_model.dart';
 
 class ProductorService {
-  final String baseUrl = 'http://10.0.2.2:3000'; // Cambia esto a tu URL de API
+  final String _baseUrl = 'http://10.0.2.2:3000'; // URL del servidor
 
-  // Método para obtener la lista de productores
+  // Obtener todos los productores
   Future<List<Productor>> fetchProductores() async {
-    final response = await http.get(Uri.parse('$baseUrl/productores'));
-
+    final response = await http.get(Uri.parse('$_baseUrl/productores'));
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Productor.fromJson(json)).toList();
     } else {
-      throw Exception('Error al cargar productores');
+      throw Exception('Error al obtener productores');
     }
   }
 
-  // Método para eliminar un productor
-  Future<void> deleteProductor(String id) async {
-    final response = await http.delete(Uri.parse('$baseUrl/productores/$id'));
-
-    if (response.statusCode != 200) {
-      throw Exception('Error al eliminar productor');
+  // Obtener un productor por ID
+  Future<Productor> fetchProductorById(String id) async {
+    final response = await http.get(Uri.parse('$_baseUrl/productores/$id'));
+    if (response.statusCode == 200) {
+      return Productor.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Error al obtener productor');
     }
   }
 
-  // Método para crear un nuevo productor
-  Future<void> createProductor(Productor productor, File? image) async {
-    String? imagePath;
-
-    if (image != null) {
-      imagePath = await uploadImage(image);
-    }
-
+  // Crear un nuevo productor con o sin imagen en base64
+  Future<void> createProductor(Productor productor) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/productores'),
+      Uri.parse('$_baseUrl/productores'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        ...productor.toJson(),
-        'foto': imagePath ??
-            productor.foto, // Usa la URL de la imagen cargada o la existente
-      }),
+      body: json.encode(productor.toJson()),
     );
 
     if (response.statusCode != 201) {
@@ -51,23 +39,12 @@ class ProductorService {
     }
   }
 
-  // Método para actualizar un productor existente
-  Future<void> updateProductor(
-      String id, Productor productor, File? image) async {
-    String? imagePath;
-
-    if (image != null) {
-      imagePath = await uploadImage(image);
-    }
-
+  // Actualizar un productor existente con o sin imagen en base64
+  Future<void> updateProductor(String id, Productor productor) async {
     final response = await http.put(
-      Uri.parse('$baseUrl/productores/$id'),
+      Uri.parse('$_baseUrl/productores/$id'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        ...productor.toJson(),
-        'foto': imagePath ??
-            productor.foto, // Usa la URL de la imagen cargada o la existente
-      }),
+      body: json.encode(productor.toJson()),
     );
 
     if (response.statusCode != 200) {
@@ -75,31 +52,14 @@ class ProductorService {
     }
   }
 
-  // Método para subir una imagen
-  Future<String> uploadImage(File image) async {
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$baseUrl/upload'),
+  // Eliminar un productor
+  Future<void> deleteProductor(String id) async {
+    final response = await http.delete(
+      Uri.parse('$_baseUrl/productores/$id'),
     );
 
-    request.files.add(
-      http.MultipartFile(
-        'file',
-        image.readAsBytes().asStream(),
-        image.lengthSync(),
-        filename: image.uri.pathSegments.last,
-        contentType:
-            MediaType('image', 'jpeg'), // Ajusta según el tipo de imagen
-      ),
-    );
-
-    final response = await request.send();
-    if (response.statusCode == 200) {
-      final responseBody = await response.stream.bytesToString();
-      final filePath = json.decode(responseBody)['filePath'];
-      return filePath;
-    } else {
-      throw Exception('Error al subir la imagen');
+    if (response.statusCode != 200) {
+      throw Exception('Error al eliminar productor');
     }
   }
 }

@@ -1,15 +1,15 @@
 class Usuario {
-  final String id;
-  final String nombre;
-  final String apellido;
-  final String email;
-  final String usuario;
-  final String clave;
-  final String? foto;
-  final DateTime fecha;
-  final DateTime ultimaConexion;
-  final int estado;
-  final int rol;
+  String id;
+  String nombre;
+  String apellido;
+  String email;
+  String usuario;
+  String clave;
+  String? foto;
+  String fecha;
+  String ultimaConexion;
+  int estado;
+  int rol;
 
   Usuario({
     required this.id,
@@ -34,8 +34,8 @@ class Usuario {
       usuario: json['usuario'],
       clave: json['clave'],
       foto: json['foto'],
-      fecha: DateTime.parse(json['fecha']),
-      ultimaConexion: DateTime.parse(json['ultima_conexion']),
+      fecha: json['fecha'],
+      ultimaConexion: json['ultimaConexion'],
       estado: json['estado'],
       rol: json['rol'],
     );
@@ -49,11 +49,39 @@ class Usuario {
       'email': email,
       'usuario': usuario,
       'clave': clave,
-      'foto': foto,
-      'fecha': fecha.toIso8601String(),
-      'ultima_conexion': ultimaConexion.toIso8601String(),
+      'foto': foto, // Manejo de null en la conversión a JSON
+      'fecha': fecha,
+      'ultimaConexion': ultimaConexion,
       'estado': estado,
       'rol': rol,
     };
+  }
+
+  Usuario copyWith({
+    String? id,
+    String? nombre,
+    String? apellido,
+    String? email,
+    String? usuario,
+    String? clave,
+    String? foto,
+    String? fecha,
+    String? ultimaConexion,
+    int? estado,
+    int? rol,
+  }) {
+    return Usuario(
+      id: id ?? this.id,
+      nombre: nombre ?? this.nombre,
+      apellido: apellido ?? this.apellido,
+      email: email ?? this.email,
+      usuario: usuario ?? this.usuario,
+      clave: clave ?? this.clave,
+      foto: foto ?? this.foto,
+      fecha: fecha ?? this.fecha,
+      ultimaConexion: ultimaConexion ?? this.ultimaConexion,
+      estado: estado ?? this.estado,
+      rol: rol ?? this.rol,
+    );
   }
 }

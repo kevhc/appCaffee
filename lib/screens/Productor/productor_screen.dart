@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
-import '../../services/productor_service.dart';
-import '../../models/productor_model.dart';
-import 'create_productor_screen.dart';
+import 'package:flutter_slidable/flutter_slidable.dart'; // Paquete para deslizar
+import 'package:appcoffee/models/productor_model.dart';
+import '../../controllers/productor_controller.dart'; // Asegúrate de tener un controlador de Productor
+import 'create_or_edit_productor_screen.dart'; // Pantalla para crear o editar productores
+import 'package:appcoffee/widgets/floating_menu.dart'; // Ajusta la ruta según sea necesario
 
 class ProductoresScreen extends StatefulWidget {
   @override
@@ -11,16 +12,17 @@ class ProductoresScreen extends StatefulWidget {
 
 class _ProductoresScreenState extends State<ProductoresScreen> {
   late Future<List<Productor>> _productores;
+  final ProductorController _controller = ProductorController();
 
   @override
   void initState() {
     super.initState();
-    _productores = ProductorService().fetchProductores();
+    _productores = _controller.fetchProductores();
   }
 
   Future<void> _refreshProductores() async {
     setState(() {
-      _productores = ProductorService().fetchProductores();
+      _productores = _controller.fetchProductores();
     });
   }
 
@@ -33,17 +35,29 @@ class _ProductoresScreenState extends State<ProductoresScreen> {
     ).then((_) => _refreshProductores());
   }
 
+  Future<void> _logout() async {
+    try {
+      Navigator.of(context).pushReplacementNamed('/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cerrar sesión. Inténtalo de nuevo.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('PRODUCTORES'),
-        backgroundColor: Colors.teal,
-        titleTextStyle: TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
+        title: Text(
+          'PRODUCTORES',
+          style: TextStyle(
+            fontSize: 20,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        backgroundColor: Colors.teal,
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: Colors.white),
@@ -68,6 +82,7 @@ class _ProductoresScreenState extends State<ProductoresScreen> {
           final productores = snapshot.data;
 
           return ListView.builder(
+            padding: const EdgeInsets.all(16),
             itemCount: productores?.length ?? 0,
             itemBuilder: (context, index) {
               final productor = productores![index];
@@ -104,8 +119,7 @@ class _ProductoresScreenState extends State<ProductoresScreen> {
 
                         if (confirm) {
                           try {
-                            await ProductorService()
-                                .deleteProductor(productor.id);
+                            await _controller.deleteProductor(productor.id);
                             _refreshProductores();
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -122,30 +136,33 @@ class _ProductoresScreenState extends State<ProductoresScreen> {
                   ],
                 ),
                 child: Card(
-                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  elevation: 5,
+                  margin: EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 8,
+                  shadowColor: Colors.black.withOpacity(0.2),
                   child: ListTile(
                     contentPadding: EdgeInsets.all(16),
                     title: Text(
                       '${productor.nombre} ${productor.apellido}',
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        color: Colors.black,
                       ),
                     ),
-                    subtitle: Text(
-                        'DNI: ${productor.dni}\nTeléfono: ${productor.telefono}'),
+                    subtitle: Text('DNI: ${productor.dni}'),
                     trailing: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: estadoColor,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         estadoText,
                         style: TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
@@ -156,6 +173,15 @@ class _ProductoresScreenState extends State<ProductoresScreen> {
             },
           );
         },
+      ),
+      floatingActionButton: FloatingMenu(
+        onHomePressed: () {
+          Navigator.pushNamed(context, '/home');
+        },
+        onProfilePressed: () {
+          Navigator.pushNamed(context, '/profile');
+        },
+        onLogoutPressed: _logout,
       ),
     );
   }
